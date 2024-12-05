@@ -17,26 +17,37 @@
         {:status  400
          :headers {"Content-Type" "application/edn"}
          :body    (let [error (Throwable->map e)]
-                    {:error (:cause error)})})
+                    (pr-str {:error (:cause error)}))})
       (catch Throwable e
         {:status  500
          :headers {"Content-Type" "application/edn"}
          :body    (pr-str {:error "Internal server error"})}))))
 
+(defn get-system-info
+  "Returns system memory information in MB"
+  []
+  {:free-memory  (quot (.freeMemory (Runtime/getRuntime)) (* 1000 1000))
+   :total-memory (quot (.totalMemory (Runtime/getRuntime)) (* 1000 1000))
+   :max-memory   (quot (.maxMemory (Runtime/getRuntime)) (* 1000 1000))})
+
 (defn make-handler [!state]
   (fn handler [req]
-    (case (:request-method req)
-      :put (let [tx (edn/read-string (slurp (:body req)))]
-             (swap! !state handle-tx tx)
-             {:status  200
-              :headers {"Content-Type" "application/edn"}
-              :body    (pr-str {:value true})})
+    (case (:uri req)
+      "/" (case (:request-method req)
+            :put (let [tx (edn/read-string (slurp (:body req)))]
+                   (swap! !state handle-tx tx)
+                   {:status  200
+                    :headers {"Content-Type" "application/edn"}
+                    :body    (pr-str {:value true})})
 
-      :get (let [tx (edn/read-string (slurp (:body req)))]
-             {:status  200
-              :headers {"Content-Type" "application/edn"}
-              :body    (pr-str {:value (handle-get @!state tx)})})
-      (throw (ex-info "method not allowed" {:method (:request-method req)})))))
+            :get (let [tx (edn/read-string (slurp (:body req)))]
+                   {:status  200
+                    :headers {"Content-Type" "application/edn"}
+                    :body    (pr-str {:value (handle-get @!state tx)})})
+            (throw (ex-info "method not allowed" {:method (:request-method req)})))
+      "/info" {:status  200
+               :headers {"Content-Type" "application/edn"}
+               :body    (pr-str (get-system-info))})))
 
 (defonce server (atom nil))
 
