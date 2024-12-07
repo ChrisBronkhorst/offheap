@@ -1,10 +1,26 @@
 (ns user
   [:require [offheap.core :refer [handle-tx handle-get]]
-            [offheap.ops :as ops]])
+            [offheap.ops :as ops]
+            [offheap.store :as store]])
 
-#_ (clojure.repl.deps/sync-deps)
+#_(clojure.repl.deps/sync-deps)
 
 (def !state (atom {}))
 
+(defn do-tx [state tx]
+  (let [new-state (handle-tx state tx)]
+    (store/log-operation tx)
+    new-state))
+
 (comment
-  (swap! !state handle-tx (ops/assoc-in-op [:a :b] 6)))
+
+  (let [txes [(ops/assoc-in-op [:a :c] {:hello "hi"})
+              (ops/assoc-in-op [:users :chris] {:name "chris"})
+              (ops/assoc-in-op [:users :kaveh] {:name "kaveh"})]]
+    (swap! !state (partial reduce do-tx) txes))
+
+  (swap! (atom {})
+    store/replay-log handle-tx)
+
+
+  nil)

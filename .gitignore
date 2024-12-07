@@ -2,3 +2,4 @@
 .cpcache
 *.iml
 .nrepl-port
+*.log

@@ -1,7 +1,8 @@
 (ns offheap.server
   (:require [org.httpkit.server :refer [run-server]]
             [clojure.edn :as edn]
-            [offheap.core :refer [handle-tx handle-get]])
+            [offheap.core :refer [handle-tx handle-get]]
+            [offheap.service :as service])
   (:import (clojure.lang ExceptionInfo)))
 
 (defn wrap-errors [handler]
