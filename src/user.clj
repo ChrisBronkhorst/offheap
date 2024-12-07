@@ -1,7 +1,8 @@
 (ns user
   [:require [offheap.core :refer [handle-tx handle-get]]
             [offheap.ops :as ops]
-            [offheap.store :as store]])
+            [offheap.store :as store]
+            [editscript.core :as e]])
 
 #_(clojure.repl.deps/sync-deps)
 
@@ -21,6 +22,10 @@
 
   (swap! (atom {})
     store/replay-log handle-tx)
+
+  (let [a {:the :data}
+        b (assoc a :the :new-data)]
+    (e/diff a b))
 
 
   nil)
